@@ -16,6 +16,7 @@ from configs.main_config import (
     CITY_PAIR_EMBEDDING_DIMENSION,
     COUNT_NUMERICAL_COLUMNS,
     MODEL_NAME,
+    CLASS_WEIGHTS,
 )
 from src.prepare_data import PrepareTrainTest
 
@@ -57,7 +58,7 @@ def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
                 val_outputs = model(X_numerical_val, X_city_val)
 
                 # Compute Validation Metrics
-                val_metrics = compute_metrics(y_val, val_outputs, criterion)
+                val_metrics = compute_metrics(y_val, val_outputs, criterion, threshold=0.2)
                 for key in total_val_metrics:
                     total_val_metrics[key] += val_metrics[key]
 
@@ -88,8 +89,8 @@ def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = NNModel(num_numerical=COUNT_NUMERICAL_COLUMNS, num_pairs=NO_OF_CITY_PAIRS, emb_dim=CITY_PAIR_EMBEDDING_DIMENSION).to(device)
-
-    criterion = nn.BCELoss()  # Binary Cross-Entropy Loss
+    class_weights = torch.tensor([CLASS_WEIGHTS[0], CLASS_WEIGHTS[1]], dtype=torch.float).to(device)
+    criterion = nn.BCELoss(weight=class_weights)  # Binary Cross-Entropy Loss
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     dataset = PrepareTrainTest()
