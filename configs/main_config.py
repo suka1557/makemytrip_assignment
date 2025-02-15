@@ -40,6 +40,10 @@ BATCH_SIZE = 1028
 BATCH_SIZE = 1028
 NO_OF_CITY_PAIRS = 4692
 CITY_PAIR_EMBEDDING_DIMENSION = 300
+EPOCHS = 5
 
-MODEL_NAME = 'model_' + str( len( os.listdir(MODELS_FOLDER) ) + 1 )
-EMBEDDING_NAME = 'embeddings_' + str(CITY_PAIR_EMBEDDING_DIMENSION) + '_' + str( len(os.listdir(EMBEDDINGS_FOLDER)) + 1)
+MODEL_NAME = 'model_' + str( len( os.listdir(MODELS_FOLDER) ) + 1 ) + ".pth"
+MODEL_NAME = os.path.join(MODELS_FOLDER, MODEL_NAME)
+
+EMBEDDING_NAME = 'embeddings_' + str(CITY_PAIR_EMBEDDING_DIMENSION) + '_' + str( len(os.listdir(EMBEDDINGS_FOLDER)) + 1)  + ".json"
+EMBEDDING_NAME = os.path.join(EMBEDDINGS_FOLDER, EMBEDDING_NAME)
