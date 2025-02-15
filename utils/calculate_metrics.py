@@ -1,7 +1,7 @@
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 
 # 📌 Helper Function to Compute Metrics
-def compute_metrics(y_true, y_pred_probs, criterion):
+def compute_metrics(y_true, y_pred_probs, criterion, threshold=0.5):
     """
     Compute loss, accuracy, precision, recall, and ROC-AUC.
     
@@ -14,7 +14,7 @@ def compute_metrics(y_true, y_pred_probs, criterion):
     - Dictionary containing computed metrics
     """
     # Convert probabilities to binary predictions (threshold = 0.5)
-    y_pred = (y_pred_probs > 0.5).float()
+    y_pred = (y_pred_probs > threshold).float()
 
     # Compute Loss
     loss = criterion(y_pred_probs, y_true).item()
