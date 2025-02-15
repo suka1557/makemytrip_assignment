@@ -3,6 +3,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 import numpy as np
 import json
+import torch
 from torch.utils.data import IterableDataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler

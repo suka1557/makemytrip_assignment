@@ -20,9 +20,9 @@ def compute_metrics(y_true, y_pred_probs, criterion, threshold=0.5):
     loss = criterion(y_pred_probs, y_true).item()
 
     # Convert to NumPy for sklearn metrics
-    y_true_np = y_true.cpu().numpy()
-    y_pred_np = y_pred.cpu().numpy()
-    y_pred_probs_np = y_pred_probs.cpu().numpy()
+    y_true_np = y_true.detach().cpu().numpy()
+    y_pred_np = y_pred.detach().cpu().numpy()
+    y_pred_probs_np = y_pred_probs.detach().cpu().numpy()
 
     # Compute Metrics
     accuracy = accuracy_score(y_true_np, y_pred_np)
