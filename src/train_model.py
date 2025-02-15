@@ -21,7 +21,7 @@ from configs.main_config import (
 from src.prepare_data import PrepareTrainTest
 
 # 🚀 Training Loop with Validation Loss
-def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
+def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS):
     for epoch in range(num_epochs):
         model.train()
         total_train_metrics = {"loss": 0, "accuracy": 0, "precision": 0, "recall": 0, "roc_auc": 0}
@@ -36,15 +36,19 @@ def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
             X_numerical_train = X_train[:, 1:].float().to(device)  
             y_train = y_train.float().to(device).unsqueeze(1)  
 
+            # Compute per-sample class weights
+            train_sample_weights = y_train * class_weights[1] + (1 - y_train) * class_weights[0]
+
             # 🔄 Forward Pass - Training
             optimizer.zero_grad()
             train_outputs = model(X_numerical_train, X_city_train)
             train_loss = criterion(train_outputs, y_train)
+            train_loss = (train_loss * train_sample_weights).mean()  # Apply weights and average
             train_loss.backward()
             optimizer.step()
 
             # Compute Training Metrics
-            train_metrics = compute_metrics(y_train, train_outputs, criterion)
+            train_metrics = compute_metrics(y_train, train_outputs, criterion, class_weights, threshold=0.2)
             for key in total_train_metrics:
                 total_train_metrics[key] += train_metrics[key]
 
@@ -57,15 +61,22 @@ def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
 
                 val_outputs = model(X_numerical_val, X_city_val)
 
+                # Compute per-sample class weights for validation
+                val_sample_weights = y_val * class_weights[1] + (1 - y_val) * class_weights[0]
+
+                # Compute weighted validation loss
+                val_loss = criterion(val_outputs, y_val)
+                val_loss = (val_loss * val_sample_weights).mean()  # Apply weights and average
+
                 # Compute Validation Metrics
-                val_metrics = compute_metrics(y_val, val_outputs, criterion, threshold=0.2)
+                val_metrics = compute_metrics(y_val, val_outputs, criterion, class_weights, threshold=0.2)
                 for key in total_val_metrics:
                     total_val_metrics[key] += val_metrics[key]
 
             model.train()  # Switch back to training mode
 
             # 🔹 Print metrics for each batch
-            print(f"Epoch {epoch+1} | Batch {batch_count} -> Train Loss: {train_metrics['loss']:.4f}, Val Loss: {val_metrics['loss']:.4f}")
+            print(f"Epoch {epoch+1} | Batch {batch_count} -> Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # 🎯 Compute Epoch-Wise Averages
         avg_train_metrics = {key: value / batch_count for key, value in total_train_metrics.items()}
@@ -89,8 +100,10 @@ def train_model(dataloader, model, criterion, optimizer, num_epochs=EPOCHS):
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = NNModel(num_numerical=COUNT_NUMERICAL_COLUMNS, num_pairs=NO_OF_CITY_PAIRS, emb_dim=CITY_PAIR_EMBEDDING_DIMENSION).to(device)
+    
     class_weights = torch.tensor([CLASS_WEIGHTS[0], CLASS_WEIGHTS[1]], dtype=torch.float).to(device)
-    criterion = nn.BCELoss(weight=class_weights)  # Binary Cross-Entropy Loss
+    criterion = nn.BCEWithLogitsLoss(reduction='none')  # Compute per sample loss 
+    
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     dataset = PrepareTrainTest()
