@@ -3,5 +3,6 @@ makemytrip_env/
 __pycache__/
 data/
 saved_models/
+saved_embeddings/
 eda/
 experiments/
