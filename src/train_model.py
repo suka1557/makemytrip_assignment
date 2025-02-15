@@ -9,7 +9,7 @@ sys.path.append("./")
 
 from utils.calculate_metrics import compute_metrics
 from utils.save_embedding import save_embeddings_file
-from models_architecture.model1 import SearchModel1  as NNModel# Change the filename here to import correct model
+from models_architecture.model2 import SearchModel2  as NNModel# Change the filename here to import correct model
 from configs.main_config import (
     EPOCHS,
     NO_OF_CITY_PAIRS,
