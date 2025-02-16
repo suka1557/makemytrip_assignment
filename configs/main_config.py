@@ -54,3 +54,4 @@ PR_PLOT_NAME = "Precision_Recall_Curve_Val_"
 
 SCALING_PIPELINE = os.path.join(PIPELINE_ASSETS, "scaler_normalization.pkl")
 TARGET_ENCODING = os.path.join(PIPELINE_ASSETS, "target_encoding.joblib")
+FINAL_MODEL = os.path.join(MODELS_FOLDER, "final_decision_tree_model.joblib")
