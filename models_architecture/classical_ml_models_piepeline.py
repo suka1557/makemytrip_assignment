@@ -88,3 +88,6 @@ if __name__ == '__main__':
 
     # Get top 3 logistic model hyperparameters
     best_model_name, best_model_params = tune_random_forest(x_train, y_train, x_val, y_val)
+
+    print(f"Best Model = {best_model_name}")
+    print(f"Parameters for Best Model = {best_model_params}")
