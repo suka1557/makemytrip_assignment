@@ -9,6 +9,7 @@ sys.path.append("./")
 from src.target_encoding import encode_target
 from configs.main_config import DATA_PATH, FINAL_MODEL
 from src.balance_data import undersample_majority_class
+from utils.pr_curve import plot_precision_recall_get_optimal_threshold
 
 if __name__ == "__main__":
 
@@ -41,6 +42,10 @@ if __name__ == "__main__":
     )
 
     model.fit(x_train, y_train)
+
+    #get optimal threshold
+    y_pred = model.predict_proba(x_train)[:, 1].flatten()
+    optimal_threshold = plot_precision_recall_get_optimal_threshold(y_train, y_pred, None, "", save_plot=True)
 
     #save final model
     joblib.dump(model, FINAL_MODEL)
