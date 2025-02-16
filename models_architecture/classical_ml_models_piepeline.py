@@ -10,6 +10,7 @@ from models_architecture.light_gbm import tune_lightgbm
 from models_architecture.xgboost_model import tune_xgboost
 from src.balance_data import undersample_majority_class
 from configs.main_config import DATA_PATH
+from src.target_encoding import encode_target
 
 
 TUNING_FUNCTION = {
@@ -66,8 +67,8 @@ def tune_all_models(X_train, y_train, X_val, y_val, tuning_functions=TUNING_FUNC
 
 if __name__ == '__main__':
     # Read Data and train model
-    train = pd.read_feather( os.path.join(DATA_PATH, "train_processed_without_city_pair.feather") )
-    val = pd.read_feather( os.path.join(DATA_PATH, "val_processed_without_city_pair.feather") )
+    train = pd.read_feather( os.path.join(DATA_PATH, "train_processed_with_city_pair.feather") )
+    val = pd.read_feather( os.path.join(DATA_PATH, "val_processed_with_city_pair.feather") )
 
     # Drop any rows that are null
     train.dropna(inplace=True)
@@ -80,14 +81,15 @@ if __name__ == '__main__':
 
     x_val, y_val = val.drop(["ACTIVITY_TYPE"], axis=1), val["ACTIVITY_TYPE"]
 
+    #Apply target encoding
+    x_train = encode_target(x_train)
+    x_val = encode_target(x_val)
+
     #Balance train data
     x_train, y_train = undersample_majority_class(x_train, y_train)
 
     print(f"Records in Training after Balancing = {len(y_train)}")
     print(y_train.value_counts() / len(y_train))
 
-    # Get top 3 logistic model hyperparameters
-    best_model_name, best_model_params = tune_random_forest(x_train, y_train, x_val, y_val)
-
-    print(f"Best Model = {best_model_name}")
-    print(f"Parameters for Best Model = {best_model_params}")
+    # Get top model hyperparameters
+    best_model_name, best_model_params = tune_all_models(x_train, y_train, x_val, y_val)
