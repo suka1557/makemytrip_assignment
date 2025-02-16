@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from itertools import product
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, precision_score, recall_score
 import os, sys
 
@@ -10,9 +10,9 @@ sys.path.append("./")
 from src.balance_data import undersample_majority_class
 from configs.main_config import DATA_PATH
 
-def tune_decision_tree(X_train, y_train, X_val, y_val):
+def tune_random_forest(X_train, y_train, X_val, y_val):
     """
-    Trains multiple Decision Tree models using training data and evaluates them on validation data.
+    Trains multiple Random Forest models using training data and evaluates them on validation data.
     Finds the top 3 hyperparameter configurations based on F1 score on validation data.
 
     Parameters:
@@ -21,31 +21,36 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
 
     Returns:
     - top_3_results (pd.DataFrame): Top 3 hyperparameter configurations ranked by validation F1 score
+    - best_recall (float): Highest recall score among the top models
     """
     # Define Hyperparameter Grid
     param_grid = {
-        "max_depth": [3, 5, 10, 20, None],  # Depth of tree
-        "min_samples_split": [50 , 100, 200, 500],  # Minimum samples required to split
-        "min_samples_leaf": [50, 100, 200],  # Minimum samples required in a leaf
+        "n_estimators": [50, 100, 200, 500],  # Number of trees
+        "max_depth": [5, 10, 20, None],  # Tree depth
+        "min_samples_split": [20, 50, 100, 200],  # Minimum samples required to split
+        "min_samples_leaf": [20, 50, 100, 200],  # Minimum samples in a leaf
         "criterion": ["gini", "entropy"]  # Splitting criteria
     }
 
     # Generate all possible hyperparameter combinations
-    param_combinations = list(product(param_grid["max_depth"], param_grid["min_samples_split"], 
-                                      param_grid["min_samples_leaf"], param_grid["criterion"]))
+    param_combinations = list(product(param_grid["n_estimators"], param_grid["max_depth"], 
+                                      param_grid["min_samples_split"], param_grid["min_samples_leaf"], 
+                                      param_grid["criterion"]))
 
     # Store Results
     results = []
 
     # Train & Evaluate Each Model
-    for max_depth, min_samples_split, min_samples_leaf, criterion in param_combinations:
+    for n_estimators, max_depth, min_samples_split, min_samples_leaf, criterion in param_combinations:
         try:
-            model = DecisionTreeClassifier(
+            model = RandomForestClassifier(
+                n_estimators=n_estimators,
                 max_depth=max_depth,
                 min_samples_split=min_samples_split,
                 min_samples_leaf=min_samples_leaf,
                 criterion=criterion,
-                random_state=42
+                random_state=42,
+                n_jobs=-1  # Use all available CPU cores for faster training
             )
             model.fit(X_train, y_train)
 
@@ -55,7 +60,7 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
             precision = precision_score(y_val, y_pred, zero_division=0)
             recall = recall_score(y_val, y_pred, zero_division=0)
 
-            # Calculate in Training Set to detect overfitting
+            # Calculate on Training Set to detect overfitting
             y_pred_train = model.predict(X_train)
             f1_train = f1_score(y_train, y_pred_train, zero_division=0)
             precision_train = precision_score(y_train, y_pred_train, zero_division=0)
@@ -63,14 +68,16 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
 
             # Store Results
             results.append({
-                "max_depth": max_depth, "min_samples_split": min_samples_split,
-                "min_samples_leaf": min_samples_leaf, "criterion": criterion,
+                "n_estimators": n_estimators, "max_depth": max_depth,
+                "min_samples_split": min_samples_split, "min_samples_leaf": min_samples_leaf,
+                "criterion": criterion,
                 "val_f1": f1, "val_precision": precision, "val_recall": recall,
                 "train_f1": f1_train, "train_precision": precision_train, "train_recall": recall_train
             })
         except Exception as e:
-            print(f"Skipping max_depth={max_depth}, min_samples_split={min_samples_split}, "
-                  f"min_samples_leaf={min_samples_leaf}, criterion={criterion} due to error: {e}")
+            print(f"Skipping n_estimators={n_estimators}, max_depth={max_depth}, "
+                  f"min_samples_split={min_samples_split}, min_samples_leaf={min_samples_leaf}, "
+                  f"criterion={criterion} due to error: {e}")
 
     # Convert Results to DataFrame & Sort by F1 Score
     results_df = pd.DataFrame(results)
@@ -82,7 +89,6 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
     print("\n🏆 Top 3 Hyperparameter Configurations:\n", top_3_results)
 
     return top_3_results, top_3_results["val_recall"].iloc[0]
-
 
 if __name__ == '__main__':
     # Read Data and train model
@@ -107,5 +113,6 @@ if __name__ == '__main__':
     print(y_train.value_counts() / len(y_train))
 
     # Get top 3 logistic model hyperparameters
-    top_3_config, top_recall = tune_decision_tree(x_train, y_train, x_val, y_val)
+    top_3_config, top_recall = tune_random_forest(x_train, y_train, x_val, y_val)
+
 

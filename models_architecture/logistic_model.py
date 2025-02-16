@@ -70,7 +70,7 @@ def tune_logistic_regression(X_train, y_train, X_val, y_val):
 
     print(top_3_results)
 
-    return top_3_results, top_3_results["val_recall"][0]
+    return top_3_results, top_3_results["val_recall"].iloc[0]
 
 
 if __name__ == '__main__':
