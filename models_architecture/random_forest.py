@@ -44,6 +44,8 @@ def tune_random_forest(X_train, y_train, X_val, y_val):
     # Train & Evaluate Each Model
     for n_estimators, max_depth, min_samples_split, min_samples_leaf, criterion in param_combinations:
         try:
+            print(f"Fitting Random Forest Models...")
+
             model = RandomForestClassifier(
                 n_estimators=n_estimators,
                 max_depth=max_depth,
@@ -75,6 +77,9 @@ def tune_random_forest(X_train, y_train, X_val, y_val):
                 "val_f1": f1, "val_precision": precision, "val_recall": recall,
                 "train_f1": f1_train, "train_precision": precision_train, "train_recall": recall_train
             })
+
+            print(results[-1])
+            
         except Exception as e:
             print(f"Skipping n_estimators={n_estimators}, max_depth={max_depth}, "
                   f"min_samples_split={min_samples_split}, min_samples_leaf={min_samples_leaf}, "
