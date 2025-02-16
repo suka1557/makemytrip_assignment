@@ -3,7 +3,7 @@ import sys
 
 PROJECT_ROOT = os.getcwd()
 DATA_PATH = os.path.join( PROJECT_ROOT, 'data')
-
+PIPELINE_ASSETS = os.path.join( PROJECT_ROOT, 'pipeline_assets')
 MODELS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_models')
 EMBEDDINGS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_embeddings')
 PLOTS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_plots')
@@ -13,6 +13,7 @@ os.makedirs(DATA_PATH, exist_ok=True)
 os.makedirs(MODELS_FOLDER, exist_ok=True)
 os.makedirs(EMBEDDINGS_FOLDER, exist_ok=True)
 os.makedirs(PLOTS_FOLDER, exist_ok=True)
+os.makedirs(PIPELINE_ASSETS, exist_ok=True)
 
 INPUT_DATA_FILE = os.path.join(DATA_PATH, 'assignment.parquet')
 CITY_PAIRS_MAPPING_FILE = os.path.join(DATA_PATH, 'city_pairs_map.json')
