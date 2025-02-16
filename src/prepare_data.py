@@ -142,4 +142,32 @@ class PrepareTrainTest(IterableDataset):
 
           yield X_train,  y_train, X_test, y_test  # ✅ Yield full batch
 
+    def _create_feather_dataframe(self, filepath, ACTIVITY_KEY=PAST_7_DAYS_ACTIVITY_FIELD):
+        parquet_file = pq.ParquetFile(self.input_data_file)
+        city_pairs_map = self._get_city_pairs()
+        row_count = 0
+        df_list = []  # Temporary list to store processed rows
+
+        # Iterate over batches of 1000 lines from the parquet file
+        for batch in parquet_file.iter_batches(batch_size=self.batch_size):  
+            
+            for row in batch.to_pandas().to_dict(orient="records"):  # Convert batch to list of dicts
+                sample = row['sample']
+                activity_df = self._process_activity(activities_array=sample[ACTIVITY_KEY], city_map=city_pairs_map)
+                df_list.append(activity_df)  # Collect processed rows
+                row_count += 1
+
+            print(f"Processed {row_count} Rows")
+            
+        # Combine all expanded rows into a single dataframe
+        combined_df = pd.concat(df_list, ignore_index=True)
+        combined_df  = combined_df.reset_index(drop=True)
+
+        #Save to feather dataframe
+        combined_df.to_feather(filepath)
+        print(f"Saved {len(combined_df)} Records")
+
+
+
+
 
