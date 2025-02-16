@@ -9,7 +9,7 @@ sys.path.append("./")
 
 from utils.calculate_metrics import compute_metrics
 from utils.save_embedding import save_embeddings_file
-from models_architecture.model2 import SearchModel2  as NNModel# Change the filename here to import correct model
+from models_architecture.model1 import SearchModel1  as NNModel# Change the filename here to import correct model
 from configs.main_config import (
     EPOCHS,
     NO_OF_CITY_PAIRS,
@@ -17,11 +17,12 @@ from configs.main_config import (
     COUNT_NUMERICAL_COLUMNS,
     MODEL_NAME,
     CLASS_WEIGHTS,
+    PATIENCE,
 )
 from src.prepare_data import PrepareTrainTest
 
 # 🚀 Training Loop with Validation Loss
-def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS):
+def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS, patience=PATIENCE):
     for epoch in range(num_epochs):
         model.train()
         total_train_metrics = {"loss": 0, "accuracy": 0, "precision": 0, "recall": 0, "roc_auc": 0}
@@ -95,19 +96,33 @@ def train_model(dataloader, model, criterion, optimizer, class_weights, num_epoc
         #Save model after completion of 1 epoch
         torch.save(model.state_dict(), MODEL_NAME)
 
+        # 🛑 Early Stopping Check
+        if avg_val_metrics['loss'] < best_val_loss:
+            best_val_loss = avg_val_metrics['loss']
+            early_stop_counter = 0  # Reset counter
+        else:
+            early_stop_counter += 1
+            print(f"Early Stopping Counter: {early_stop_counter}/{patience}")
+            if early_stop_counter >= patience:
+                print("Early stopping triggered. Stopping training.")
+                break
+
         
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = NNModel(num_numerical=COUNT_NUMERICAL_COLUMNS, num_pairs=NO_OF_CITY_PAIRS, emb_dim=CITY_PAIR_EMBEDDING_DIMENSION).to(device)
     
-    class_weights = torch.tensor([CLASS_WEIGHTS[0], CLASS_WEIGHTS[1]], dtype=torch.float).to(device)
+    class_weights = torch.tensor([CLASS_WEIGHTS[0], CLASS_WEIGHTS[1]], dtype=torch.float, device=device)
+
     criterion = nn.BCEWithLogitsLoss(reduction='none')  # Compute per sample loss 
     
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    # optimizer = optim.Adam(model.parameters(), lr=0.001)
+    # 🔄 SGD with Momentum
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  
 
     dataset = PrepareTrainTest()
     dataloader = DataLoader(dataset, batch_size=None)  # No need to batch, already handled
 
     #train the model
-    train_model(dataloader, model, criterion, optimizer, EPOCHS)
+    train_model(dataloader, model, criterion, optimizer, class_weights, EPOCHS)
