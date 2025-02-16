@@ -18,12 +18,11 @@ from configs.main_config import (
     COUNT_NUMERICAL_COLUMNS,
     MODEL_NAME,
     CLASS_WEIGHTS,
-    PATIENCE,
 )
 from src.prepare_data import PrepareTrainTest
 
 # 🚀 Training Loop with Validation Loss
-def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS, patience=PATIENCE):
+def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS):
     for epoch in range(num_epochs):
         model.train()
         batch_count = 0
@@ -122,9 +121,9 @@ if __name__ == '__main__':
 
     criterion = nn.BCEWithLogitsLoss(reduction='none')  # Compute per sample loss 
     
-    # optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
     # 🔄 SGD with Momentum
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  
+    # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  
 
     dataset = PrepareTrainTest()
     dataloader = DataLoader(dataset, batch_size=None)  # No need to batch, already handled
