@@ -81,7 +81,7 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
 
     print("\n🏆 Top 3 Hyperparameter Configurations:\n", top_3_results)
 
-    return top_3_results
+    return top_3_results, top_3_results["val_recall"][0]
 
 
 if __name__ == '__main__':
@@ -107,5 +107,5 @@ if __name__ == '__main__':
     print(y_train.value_counts() / len(y_train))
 
     # Get top 3 logistic model hyperparameters
-    top_3_config = tune_decision_tree(x_train, y_train, x_val, y_val)
+    top_3_config, top_recall = tune_decision_tree(x_train, y_train, x_val, y_val)
 

@@ -70,7 +70,7 @@ def tune_logistic_regression(X_train, y_train, X_val, y_val):
 
     print(top_3_results)
 
-    return top_3_results
+    return top_3_results, top_3_results["val_recall"][0]
 
 
 if __name__ == '__main__':
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     print(y_train.value_counts() / len(y_train))
 
     # Get top 3 logistic model hyperparameters
-    top_3_config = tune_logistic_regression(x_train, y_train, x_val, y_val)
+    top_3_config, top_recall = tune_logistic_regression(x_train, y_train, x_val, y_val)
 
 
