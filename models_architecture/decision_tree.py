@@ -9,6 +9,7 @@ sys.path.append("./")
 
 from src.balance_data import undersample_majority_class
 from configs.main_config import DATA_PATH
+from src.target_encoding import encode_target
 
 def tune_decision_tree(X_train, y_train, X_val, y_val):
     """
@@ -83,11 +84,10 @@ def tune_decision_tree(X_train, y_train, X_val, y_val):
 
     return top_3_results, top_3_results["val_recall"].iloc[0]
 
-
 if __name__ == '__main__':
     # Read Data and train model
-    train = pd.read_feather( os.path.join(DATA_PATH, "train_processed_without_city_pair.feather") )
-    val = pd.read_feather( os.path.join(DATA_PATH, "val_processed_without_city_pair.feather") )
+    train = pd.read_feather( os.path.join(DATA_PATH, "train_processed_with_city_pair.feather") )
+    val = pd.read_feather( os.path.join(DATA_PATH, "val_processed_with_city_pair.feather") )
 
     # Drop any rows that are null
     train.dropna(inplace=True)
@@ -100,12 +100,16 @@ if __name__ == '__main__':
 
     x_val, y_val = val.drop(["ACTIVITY_TYPE"], axis=1), val["ACTIVITY_TYPE"]
 
+    #Apply target encoding
+    x_train = encode_target(x_train)
+    x_val = encode_target(x_val)
+
     #Balance train data
     x_train, y_train = undersample_majority_class(x_train, y_train)
 
     print(f"Records in Training after Balancing = {len(y_train)}")
     print(y_train.value_counts() / len(y_train))
 
-    # Get top 3 logistic model hyperparameters
+    # Get top 3 decision tree model hyperparameters
     top_3_config, top_recall = tune_decision_tree(x_train, y_train, x_val, y_val)
 
