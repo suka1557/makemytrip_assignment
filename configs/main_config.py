@@ -51,3 +51,6 @@ EMBEDDING_NAME = 'embeddings_' + str(CITY_PAIR_EMBEDDING_DIMENSION) + '_' + str(
 EMBEDDING_NAME = os.path.join(EMBEDDINGS_FOLDER, EMBEDDING_NAME)
 
 PR_PLOT_NAME = "Precision_Recall_Curve_Val_"
+
+SCALING_PIPELINE = os.path.join(PIPELINE_ASSETS, "scaler_normalization.pkl")
+TARGET_ENCODING = os.path.join(PIPELINE_ASSETS, "target_encoding.joblib")
