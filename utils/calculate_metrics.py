@@ -1,8 +1,14 @@
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import torch
+import sys
+import numpy as np
+
+sys.path.append("./")
+
+from configs.main_config import CLASS_WEIGHTS
 
 # 📌 Helper Function to Compute Metrics with Class Weights
-def compute_metrics(y_true, y_pred_probs, criterion, class_weights, threshold=0.5):
+def compute_metrics(y_true, y_pred_probs,threshold=0.5):
     """
     Compute loss, accuracy, precision, recall, and ROC-AUC with class weights.
     
@@ -16,31 +22,23 @@ def compute_metrics(y_true, y_pred_probs, criterion, class_weights, threshold=0.
     Returns:
     - Dictionary containing computed weighted metrics
     """
-    
+
+    y_true = np.array(y_true).flatten()
+    y_pred_probs = np.array(y_pred_probs).flatten()
+
     # Convert probabilities to binary predictions
-    y_pred = (y_pred_probs > threshold).float()
+    y_pred = (y_pred_probs > threshold) * 1
+    y_pred = y_pred.flatten()
 
-    # Compute per-sample class weights based on true labels
-    sample_weights = y_true * class_weights[1] + (1 - y_true) * class_weights[0]
-
-    # Compute Weighted Loss
-    per_sample_loss = criterion(y_pred_probs, y_true)
-    weighted_loss = (per_sample_loss * sample_weights).mean().item()  # Apply weights and average
-
-    # Convert Tensors to NumPy for sklearn metrics
-    y_true_np = y_true.detach().cpu().numpy()
-    y_pred_np = y_pred.detach().cpu().numpy()
-    y_pred_probs_np = y_pred_probs.detach().cpu().numpy()
-    sample_weights_np = sample_weights.detach().cpu().numpy()  # Convert weights to NumPy
+    sample_weights_np = np.where(y_pred == 1, CLASS_WEIGHTS[1], 1)  # Convert weights to NumPy
 
     # Compute Metrics with sample weights
-    accuracy = accuracy_score(y_true_np, y_pred_np)  # Accuracy is unweighted
-    precision = precision_score(y_true_np, y_pred_np, sample_weight=sample_weights_np, zero_division=0)
-    recall = recall_score(y_true_np, y_pred_np, sample_weight=sample_weights_np, zero_division=0)
-    roc_auc = roc_auc_score(y_true_np, y_pred_probs_np, sample_weight=sample_weights_np)  # Using probabilities for AUC
+    accuracy = accuracy_score(y_true, y_pred)  # Accuracy is unweighted
+    precision = precision_score(y_true, y_pred, sample_weight=sample_weights_np, zero_division=0)
+    recall = recall_score(y_true, y_pred, sample_weight=sample_weights_np, zero_division=0)
+    roc_auc = roc_auc_score(y_true, y_pred, sample_weight=sample_weights_np)  # Using probabilities for AUC
 
     return {
-        "loss": weighted_loss,
         "accuracy": accuracy,
         "precision": precision,
         "recall": recall,

@@ -6,13 +6,15 @@ DATA_PATH = os.path.join( PROJECT_ROOT, 'data')
 
 MODELS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_models')
 EMBEDDINGS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_embeddings')
+PLOTS_FOLDER = os.path.join(PROJECT_ROOT, 'saved_plots')
 
 # Make folders if they don't exist
 os.makedirs(DATA_PATH, exist_ok=True)
 os.makedirs(MODELS_FOLDER, exist_ok=True)
 os.makedirs(EMBEDDINGS_FOLDER, exist_ok=True)
+os.makedirs(PLOTS_FOLDER, exist_ok=True)
 
-INPUT_DATA_FILE = os.path.join(DATA_PATH, 'assignment.parquet')
+INPUT_DATA_FILE = os.path.join(DATA_PATH, 'subset.parquet')
 CITY_PAIRS_MAPPING_FILE = os.path.join(DATA_PATH, 'city_pairs_map.json')
 
 
@@ -40,10 +42,12 @@ BATCH_SIZE = 2056
 NO_OF_CITY_PAIRS = 4692
 CITY_PAIR_EMBEDDING_DIMENSION = 300
 CLASS_WEIGHTS = {0: 1, 1: 25}
-EPOCHS = 10
+EPOCHS = 1
 PATIENCE = 3
 MODEL_NAME = 'model_' + str( len( os.listdir(MODELS_FOLDER) ) + 1 ) + ".pth"
 MODEL_NAME = os.path.join(MODELS_FOLDER, MODEL_NAME)
 
 EMBEDDING_NAME = 'embeddings_' + str(CITY_PAIR_EMBEDDING_DIMENSION) + '_' + str( len(os.listdir(EMBEDDINGS_FOLDER)) + 1)  + ".json"
 EMBEDDING_NAME = os.path.join(EMBEDDINGS_FOLDER, EMBEDDING_NAME)
+
+PR_PLOT_NAME = "Precision_Recall_Curve_Val_"

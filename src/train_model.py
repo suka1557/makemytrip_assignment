@@ -9,6 +9,7 @@ sys.path.append("./")
 
 from utils.calculate_metrics import compute_metrics
 from utils.save_embedding import save_embeddings_file
+from utils.pr_curve import plot_precision_recall_get_optimal_threshold
 from models_architecture.model1 import SearchModel1  as NNModel# Change the filename here to import correct model
 from configs.main_config import (
     EPOCHS,
@@ -25,12 +26,20 @@ from src.prepare_data import PrepareTrainTest
 def train_model(dataloader, model, criterion, optimizer, class_weights, num_epochs=EPOCHS, patience=PATIENCE):
     for epoch in range(num_epochs):
         model.train()
-        total_train_metrics = {"loss": 0, "accuracy": 0, "precision": 0, "recall": 0, "roc_auc": 0}
-        total_val_metrics = {"loss": 0, "accuracy": 0, "precision": 0, "recall": 0, "roc_auc": 0}
         batch_count = 0
+
+        #keep list for comparing predictions at EPOCH level
+        y_train_true = []
+        y_train_pred = []
+        y_val_true = []
+        y_val_pred = []
 
         for X_train, y_train, X_val, y_val in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
             batch_count += 1
+
+            # Add true labels in lists
+            y_train_true.extend(y_train)
+            y_val_true.extend(y_val)
 
             # Extract city pair index & numerical features for Training
             X_city_train = X_train[:, 0].long().to(device)  
@@ -48,10 +57,8 @@ def train_model(dataloader, model, criterion, optimizer, class_weights, num_epoc
             train_loss.backward()
             optimizer.step()
 
-            # Compute Training Metrics
-            train_metrics = compute_metrics(y_train, train_outputs, criterion, class_weights, threshold=0.2)
-            for key in total_train_metrics:
-                total_train_metrics[key] += train_metrics[key]
+            # Add predicted train prob
+            y_train_pred.extend(train_outputs)
 
             # 🏁 Validation Step
             model.eval()  
@@ -62,6 +69,9 @@ def train_model(dataloader, model, criterion, optimizer, class_weights, num_epoc
 
                 val_outputs = model(X_numerical_val, X_city_val)
 
+                #Add predicted val to list
+                y_val_pred.extend(val_outputs)
+
                 # Compute per-sample class weights for validation
                 val_sample_weights = y_val * class_weights[1] + (1 - y_val) * class_weights[0]
 
@@ -69,43 +79,38 @@ def train_model(dataloader, model, criterion, optimizer, class_weights, num_epoc
                 val_loss = criterion(val_outputs, y_val)
                 val_loss = (val_loss * val_sample_weights).mean()  # Apply weights and average
 
-                # Compute Validation Metrics
-                val_metrics = compute_metrics(y_val, val_outputs, criterion, class_weights, threshold=0.2)
-                for key in total_val_metrics:
-                    total_val_metrics[key] += val_metrics[key]
 
             model.train()  # Switch back to training mode
 
             # 🔹 Print metrics for each batch
             print(f"Epoch {epoch+1} | Batch {batch_count} -> Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
-        # 🎯 Compute Epoch-Wise Averages
-        avg_train_metrics = {key: value / batch_count for key, value in total_train_metrics.items()}
-        avg_val_metrics = {key: value / batch_count for key, value in total_val_metrics.items()}
+
+
+        # Get EPOCH level metrics
+        y_train_true = [t.item() for t in y_train_true]
+        y_train_pred = [t.item() for t in y_train_pred]
+        y_val_true = [t.item() for t in y_val_true]
+        y_val_pred = [t.item() for t in y_val_pred]
+
+        epoch_optimal_threshold = plot_precision_recall_get_optimal_threshold(y_train_true, y_train_pred, class_weights, epoch)
+        training_metrics = compute_metrics(y_train_true, y_train_pred,  epoch_optimal_threshold)
+        validation_metrics = compute_metrics(y_val_true, y_val_pred, epoch_optimal_threshold)
+        #Save PR curve for validation set
+        _ = plot_precision_recall_get_optimal_threshold( y_val_true, y_val_pred, class_weights, epoch, save_plot=True)
 
         print(f"Epoch {epoch+1} Summary -> "
-              f"Train Loss: {avg_train_metrics['loss']:.4f}, Train Acc: {avg_train_metrics['accuracy']:.4f}, "
-              f"Train Precision: {avg_train_metrics['precision']:.4f}, Train Recall: {avg_train_metrics['recall']:.4f}, Train ROC-AUC: {avg_train_metrics['roc_auc']:.4f} | "
-              f"Val Loss: {avg_val_metrics['loss']:.4f}, Val Acc: {avg_val_metrics['accuracy']:.4f}, "
-              f"Val Precision: {avg_val_metrics['precision']:.4f}, Val Recall: {avg_val_metrics['recall']:.4f}, Val ROC-AUC: {avg_val_metrics['roc_auc']:.4f}"
-             )
+        f"Train Acc: {training_metrics['accuracy']:.4f}, "
+        f"Train Precision: {training_metrics['precision']:.4f}, Train Recall: {training_metrics['recall']:.4f}, Train ROC-AUC: {training_metrics['roc_auc']:.4f} | "
+        f"Val Acc: {validation_metrics['accuracy']:.4f}, "
+        f"Val Precision: {validation_metrics['precision']:.4f}, Val Recall: {validation_metrics['recall']:.4f}, Val ROC-AUC: {validation_metrics['roc_auc']:.4f}"
+        )
         
         #Save embedding after completion of 1 epoch
         save_embeddings_file(model=model)
 
         #Save model after completion of 1 epoch
         torch.save(model.state_dict(), MODEL_NAME)
-
-        # 🛑 Early Stopping Check
-        if avg_val_metrics['loss'] < best_val_loss:
-            best_val_loss = avg_val_metrics['loss']
-            early_stop_counter = 0  # Reset counter
-        else:
-            early_stop_counter += 1
-            print(f"Early Stopping Counter: {early_stop_counter}/{patience}")
-            if early_stop_counter >= patience:
-                print("Early stopping triggered. Stopping training.")
-                break
 
         
 
