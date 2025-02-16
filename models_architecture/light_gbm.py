@@ -9,6 +9,7 @@ sys.path.append("./")
 
 from src.balance_data import undersample_majority_class
 from configs.main_config import DATA_PATH
+from src.target_encoding import encode_target
 
 def tune_lightgbm(X_train, y_train, X_val, y_val):
     """
@@ -46,6 +47,8 @@ def tune_lightgbm(X_train, y_train, X_val, y_val):
     # Train & Evaluate Each Model
     for num_leaves, max_depth, learning_rate, n_estimators, min_data_in_leaf, lambda_l1, lambda_l2 in param_combinations:
         try:
+            print(f"Fitting LightFBM Models...")
+
             model = lgb.LGBMClassifier(
                 num_leaves=num_leaves,
                 max_depth=max_depth,
@@ -80,6 +83,9 @@ def tune_lightgbm(X_train, y_train, X_val, y_val):
                 "val_f1": f1, "val_precision": precision, "val_recall": recall,
                 "train_f1": f1_train, "train_precision": precision_train, "train_recall": recall_train
             })
+
+            print(results[-1])
+            
         except Exception as e:
             print(f"Skipping num_leaves={num_leaves}, max_depth={max_depth}, learning_rate={learning_rate}, "
                   f"n_estimators={n_estimators}, min_data_in_leaf={min_data_in_leaf}, lambda_l1={lambda_l1}, "
