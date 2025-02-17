@@ -45,8 +45,8 @@ async def predict(
         payload: RequestPayload = None
     ):
 
-    if len(payload.features) != 15:
-        raise HTTPException(status_code=400, detail="features must be a list of 15 floating point numbers")
+    if len(payload.features) != 23:
+        raise HTTPException(status_code=400, detail="features must be a list of 23 floating point numbers")
     
     search_df = pd.DataFrame([ np.array(payload.features) ])
     search_df.columns = API_FIELD_NAMES
