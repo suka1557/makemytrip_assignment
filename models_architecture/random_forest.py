@@ -26,10 +26,10 @@ def tune_random_forest(X_train, y_train, X_val, y_val):
     """
     # Define Hyperparameter Grid
     param_grid = {
-        "n_estimators": [50, 100, 200, 500],  # Number of trees
-        "max_depth": [5, 10, 20, None],  # Tree depth
-        "min_samples_split": [20, 50, 100, 200],  # Minimum samples required to split
-        "min_samples_leaf": [20, 50, 100, 200],  # Minimum samples in a leaf
+        "n_estimators": [25, 50],  # Number of trees
+        "max_depth": [5, 10, None],  # Tree depth
+        "min_samples_split": [20, 50, 100],  # Minimum samples required to split
+        "min_samples_leaf": [20, 50, 100],  # Minimum samples in a leaf
         "criterion": ["gini", "entropy"]  # Splitting criteria
     }
 

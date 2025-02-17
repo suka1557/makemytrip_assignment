@@ -27,12 +27,12 @@ def tune_lightgbm(X_train, y_train, X_val, y_val):
     # Define Hyperparameter Grid
     param_grid = {
         "num_leaves": [30, 50, 100],  # Number of leaves in a tree
-        "max_depth": [5, 10, 20, -1],  # Tree depth (-1 means no limit)
-        "learning_rate": [0.01, 0.05, 0.1],  # Learning rate for boosting
-        "n_estimators": [50, 100, 200, 500],  # Number of boosting rounds
+        "max_depth": [5, 10],  # Tree depth (-1 means no limit)
+        "learning_rate": [0.01, 0.1],  # Learning rate for boosting
+        "n_estimators": [25, 50],  # Number of boosting rounds
         "min_data_in_leaf": [20, 50, 100],  # Minimum number of samples in a leaf
-        "lambda_l1": [0, 0.1, 1],  # L1 regularization
-        "lambda_l2": [0, 0.1, 1],  # L2 regularization
+        "lambda_l1": [0.1, 1],  # L1 regularization
+        "lambda_l2": [0.1, 1],  # L2 regularization
     }
 
     # Generate all possible hyperparameter combinations

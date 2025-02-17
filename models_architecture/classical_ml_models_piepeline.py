@@ -14,8 +14,8 @@ from src.target_encoding import encode_target
 
 
 TUNING_FUNCTION = {
-    'logistic_regression': tune_logistic_regression,
-    'decision_tree': tune_decision_tree,
+    # 'logistic_regression': tune_logistic_regression,
+    # 'decision_tree': tune_decision_tree,
     'random_forest': tune_random_forest,
     'light_gbm': tune_lightgbm,
     'xgboost': tune_xgboost,

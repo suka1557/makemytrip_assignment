@@ -19,12 +19,12 @@ def tune_xgboost(X_train, y_train, X_val, y_val):
     """
     # Define Hyperparameter Grid
     param_grid = {
-        "n_estimators": [50, 100, 200],  # Number of boosting rounds
+        "n_estimators": [25, 50],  # Number of boosting rounds
         "max_depth": [3, 5, 10],  # Maximum depth of trees
-        "learning_rate": [0.01, 0.1, 0.2],  # Step size shrinkage
-        "subsample": [0.7, 0.9, 1.0],  # Fraction of samples used for training
-        "colsample_bytree": [0.7, 0.9, 1.0],  # Fraction of features used per tree
-        "gamma": [0, 1, 5]  # Minimum loss reduction to make a split
+        "learning_rate": [0.01, 0.1],  # Step size shrinkage
+        "subsample": [0.7, 1.0],  # Fraction of samples used for training
+        "colsample_bytree": [0.7, 1.0],  # Fraction of features used per tree
+        "gamma": [1, 5]  # Minimum loss reduction to make a split
     }
 
     # Generate all possible hyperparameter combinations
